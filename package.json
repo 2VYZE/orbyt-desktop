@@ -1,9 +1,13 @@
 {
   "name": "orbyt-desktop",
   "productName": "Orbyt",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Orbyt \u2013 chat, voice & communities. Desktop app.",
-  "author": "Orbyt",
+  "author": {
+    "name": "Orbyt",
+    "email": "noreply@orbyt.fun",
+    "url": "https://orbyt.fun"
+  },
   "license": "MIT",
   "homepage": "https://orbyt.fun",
   "main": "src/main.js",
@@ -87,7 +91,9 @@
       ],
       "artifactName": "Orbyt-linux.${ext}",
       "category": "Network",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "maintainer": "Orbyt <noreply@orbyt.fun>",
+      "synopsis": "Chat, voice & communities"
     }
   }
 }
