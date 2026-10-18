@@ -14,7 +14,7 @@ Die Desktop-App für [Orbyt](https://orbyt.fun) – Chat, Sprachkanäle und Comm
 ## Neue Version veröffentlichen
 
 1. In `package.json` die `version` erhöhen (z. B. `1.0.1`).
-2. Commit und Tag `v1.0.1` pushen → GitHub Actions baut Windows (.exe), macOS (.dmg) und Linux (.AppImage/.deb) und veröffentlicht sie als Release.
+2. Committen und auf `main` pushen → GitHub Actions baut Windows (.exe), macOS (.dmg) und Linux (.AppImage/.deb) und veröffentlicht sie als Release.
 3. Installierte Apps holen sich das Update von selbst.
 
 Lokal testen: `npm install` und `npm start`.

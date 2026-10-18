@@ -2,7 +2,9 @@ name: Build & Release
 
 on:
   push:
+    branches: [main]
     tags: ['v*']
+    paths: ['package.json', 'src/**', 'assets/**', 'build/**', '.github/workflows/**']
   workflow_dispatch:
 
 permissions:
