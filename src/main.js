@@ -62,8 +62,10 @@ function createWindow() {
 }
 
 // ---------------------------------------------------------------- Tray
+const traySize = process.platform === 'win32' ? 32 : 16;
+const trayIcon = n => nativeImage.createFromPath(asset(n ? `tray-${traySize}-${n > 9 ? '9plus' : n}.png` : `tray-${traySize}.png`));
 function buildTray() {
-  tray = new Tray(nativeImage.createFromPath(asset(process.platform === 'win32' ? 'tray-32.png' : 'tray-16.png')));
+  tray = new Tray(trayIcon(0));
   tray.setToolTip('Orbyt');
   tray.on('click', showWin);
   refreshTray();
@@ -177,8 +179,13 @@ ipcMain.on('badge', (_e, n) => {
   if (process.platform === 'win32') {
     win?.setOverlayIcon(unread ? badgeIcon(unread) : null, unread ? `${unread} ungelesen` : '');
     if (unread && win && !win.isFocused()) win.flashFrame(true);
-  } else app.setBadgeCount(unread);
-  tray?.setToolTip(unread ? `Orbyt (${unread})` : 'Orbyt');
+  } else {
+    app.setBadgeCount(unread); // macOS-Dock / Linux-Launcher
+    if (process.platform === 'darwin' && unread && win && !win.isFocused()) app.dock?.bounce('informational');
+  }
+  // Roter Zähler auch am Tray-Symbol (wichtig, wenn das Fenster im Hintergrund/Tray ist)
+  try { tray?.setImage(trayIcon(unread)); } catch {}
+  tray?.setToolTip(unread ? `Orbyt (${unread} ungelesen)` : 'Orbyt');
 });
 ipcMain.on('focus', showWin);
 ipcMain.handle('info', () => ({ version: app.getVersion(), platform: process.platform, game: currentGame, gameDetection: cfg.gameDetection }));
