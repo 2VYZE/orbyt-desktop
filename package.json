@@ -1,0 +1,93 @@
+{
+  "name": "orbyt-desktop",
+  "productName": "Orbyt",
+  "version": "1.0.0",
+  "description": "Orbyt \u2013 chat, voice & communities. Desktop app.",
+  "author": "Orbyt",
+  "license": "MIT",
+  "homepage": "https://orbyt.fun",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never",
+    "release": "electron-builder --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
+  "devDependencies": {
+    "electron": "44.5.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "fun.orbyt.app",
+    "productName": "Orbyt",
+    "copyright": "Orbyt",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "2VYZE",
+        "repo": "orbyt-desktop",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Orbyt-Setup.${ext}",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Orbyt",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "artifactName": "Orbyt-mac.${ext}",
+      "category": "public.app-category.social-networking",
+      "icon": "build/icon.png",
+      "identity": null,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Orbyt needs your microphone for voice channels.",
+        "NSCameraUsageDescription": "Orbyt needs your camera for video.",
+        "NSScreenCaptureUsageDescription": "Orbyt needs screen recording to share your screen."
+      }
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "artifactName": "Orbyt-linux.${ext}",
+      "category": "Network",
+      "icon": "build/icon.png"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'self'">
+<title>Bildschirm teilen</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0d0f1c; color: #e8e9f3; font: 14px/1.4 "Segoe UI", system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+  header { padding: 18px 22px 10px; }
+  h1 { margin: 0 0 4px; font-size: 19px; }
+  p { margin: 0; color: #9aa0b8; font-size: 13px; }
+  .tabs { display: flex; gap: 8px; padding: 6px 22px 12px; }
+  .tab { padding: 7px 14px; border-radius: 999px; border: 1px solid #2a2e48; background: #151830; color: #c7cae0; cursor: pointer; font: inherit; font-weight: 600; }
+  .tab.on { background: linear-gradient(135deg, #7c5cff, #22d3ee); color: #fff; border-color: transparent; }
+  .grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 22px 12px; align-content: start; }
+  .src { border: 2px solid transparent; border-radius: 14px; background: #151830; padding: 8px; cursor: pointer; text-align: left; color: inherit; font: inherit; }
+  .src:hover { border-color: #3b3f66; }
+  .src.on { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.25); }
+  .src img.thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 9px; background: #000; display: block; }
+  .name { display: flex; gap: 6px; align-items: center; margin-top: 7px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .name img { width: 16px; height: 16px; }
+  footer { display: flex; align-items: center; gap: 10px; padding: 14px 22px; border-top: 1px solid #22263f; }
+  label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .grow { flex: 1; }
+  button.btn { padding: 9px 18px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 700; }
+  .ghost { background: #1d2140; color: #e8e9f3; }
+  .live { background: linear-gradient(135deg, #ef4444, #db2777); color: #fff; }
+  .live:disabled { opacity: .45; cursor: default; }
+</style>
+</head>
+<body>
+  <header><h1>Was möchtest du teilen?</h1><p>Wähle einen Bildschirm oder ein Fenster (z. B. dein Spiel).</p></header>
+  <div class="tabs"><button class="tab on" data-k="screen">Bildschirme</button><button class="tab" data-k="window">Fenster</button></div>
+  <div class="grid" id="grid"></div>
+  <footer>
+    <label id="audioRow"><input type="checkbox" id="audio" checked> Systemton mit übertragen</label>
+    <span class="grow"></span>
+    <button class="btn ghost" id="cancel">Abbrechen</button>
+    <button class="btn live" id="go" disabled>● Live gehen</button>
+  </footer>
+  <script src="picker.js"></script>
+</body>
+</html>
