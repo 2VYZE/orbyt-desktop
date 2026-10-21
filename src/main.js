@@ -38,7 +38,7 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true, sandbox: true, nodeIntegration: false,
-      backgroundThrottling: false, // Sprachkanal & Nachrichten laufen auch minimiert weiter
+      backgroundThrottling: true, // wird im Sprachkanal abgeschaltet (siehe applyPerf)
       spellcheck: true,
     },
   });
@@ -198,10 +198,11 @@ ipcMain.on('perf', (_e, v) => {
 });
 ipcMain.on('voice', (_e, on) => { inVoice = !!on; applyPerf(); });
 
-// Leistungsmodus in der App: seltener nach Spielen suchen und – wenn man nicht im Sprachkanal ist –
-// das Fenster im Hintergrund drosseln lassen (spart CPU und Akku). Im Sprachkanal läuft immer alles voll.
+// Fenster im Hintergrund (minimiert/im Tray) drosseln, solange man nicht im Sprachkanal ist – spart CPU und Akku.
+// Nachrichten und Benachrichtigungen kommen trotzdem sofort an. Im Sprachkanal läuft immer alles voll.
+// Leistungsmodus: zusätzlich seltener nach Spielen suchen.
 function applyPerf() {
-  try { win?.webContents.setBackgroundThrottling(perf.on && !inVoice); } catch {}
+  try { win?.webContents.setBackgroundThrottling(!inVoice); } catch {}
   scheduleScan();
 }
 function scheduleScan() {
