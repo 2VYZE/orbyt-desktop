@@ -20,6 +20,8 @@ app.commandLine.appendSwitch('force-fieldtrials', 'WebRTC-Video-Pacing/Disabled/
 // ---------------------------------------------------------------- Einstellungen (klein, als JSON)
 const cfgFile = () => path.join(app.getPath('userData'), 'settings.json');
 let cfg = { closeToTray: true, autostart: true, startHidden: false, gameDetection: true, bounds: null };
+// Leistungsmodus (kommt von der Seite) und ob man gerade im Sprachkanal ist
+let perf = { on: false, pref: 'auto' }, inVoice = false, scanTimer = null;
 try { cfg = { ...cfg, ...JSON.parse(fs.readFileSync(cfgFile(), 'utf8')) }; } catch {}
 const saveCfg = () => { try { fs.writeFileSync(cfgFile(), JSON.stringify(cfg, null, 2)); } catch {} };
 
@@ -80,6 +82,7 @@ function refreshTray() {
     { type: 'separator' },
     { label: 'Mit Windows starten', type: 'checkbox', checked: cfg.autostart, click: m => { cfg.autostart = m.checked; saveCfg(); applyAutostart(); } },
     { label: 'Beim Schließen im Hintergrund bleiben', type: 'checkbox', checked: cfg.closeToTray, click: m => { cfg.closeToTray = m.checked; saveCfg(); } },
+    { label: 'Leistungsmodus', type: 'checkbox', checked: perf.on, click: m => send('perf', m.checked) },
     { label: 'Spiele automatisch erkennen', type: 'checkbox', checked: cfg.gameDetection, click: m => { cfg.gameDetection = m.checked; saveCfg(); if (!m.checked) setGame(null); } },
     { type: 'separator' },
     { label: 'Nach Updates suchen', click: () => checkUpdates(true) },
@@ -188,6 +191,23 @@ ipcMain.on('badge', (_e, n) => {
   tray?.setToolTip(unread ? `Orbyt (${unread} ungelesen)` : 'Orbyt');
 });
 ipcMain.on('focus', showWin);
+ipcMain.on('perf', (_e, v) => {
+  perf = { on: !!v?.on, pref: v?.pref === true || v?.pref === false ? v.pref : 'auto' };
+  applyPerf();
+  refreshTray();
+});
+ipcMain.on('voice', (_e, on) => { inVoice = !!on; applyPerf(); });
+
+// Leistungsmodus in der App: seltener nach Spielen suchen und – wenn man nicht im Sprachkanal ist –
+// das Fenster im Hintergrund drosseln lassen (spart CPU und Akku). Im Sprachkanal läuft immer alles voll.
+function applyPerf() {
+  try { win?.webContents.setBackgroundThrottling(perf.on && !inVoice); } catch {}
+  scheduleScan();
+}
+function scheduleScan() {
+  clearInterval(scanTimer);
+  scanTimer = setInterval(scanGames, perf.on ? 45000 : 15000);
+}
 ipcMain.handle('info', () => ({ version: app.getVersion(), platform: process.platform, game: currentGame, gameDetection: cfg.gameDetection }));
 
 // kleines rotes Kreis-Symbol mit Zahl (vorgefertigte PNGs)
@@ -216,7 +236,7 @@ app.whenReady().then(() => {
   // Stumm/Taub funktioniert auch im Spiel (globale Tastenkürzel)
   globalShortcut.register('CommandOrControl+Shift+M', () => send('hotkey', 'mute'));
   globalShortcut.register('CommandOrControl+Shift+D', () => send('hotkey', 'deafen'));
-  setInterval(scanGames, 15000);
+  scheduleScan();
   win.webContents.on('did-finish-load', () => { setTimeout(scanGames, 3000); });
   setTimeout(() => checkUpdates(false), 8000);
   setInterval(() => checkUpdates(false), 6 * 60 * 60 * 1000);
