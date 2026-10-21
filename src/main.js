@@ -1,7 +1,7 @@
 // Orbyt Desktop – lädt orbyt.fun in einem eigenen Fenster und ergänzt, was ein Browser nicht kann:
 // Tray-Symbol, Autostart, Spiele-Erkennung, globale Tastenkürzel, Bildschirm teilen mit Systemton,
 // Zahl auf dem Taskleisten-Symbol und automatische Updates.
-const { app, BrowserWindow, Tray, Menu, shell, session, ipcMain, desktopCapturer, globalShortcut, nativeImage, Notification } = require('electron');
+const { app, BrowserWindow, Tray, Menu, shell, session, ipcMain, desktopCapturer, globalShortcut, nativeImage, Notification, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
@@ -60,7 +60,10 @@ function createWindow() {
   });
   const remember = () => { if (!win.isMaximized() && !win.isMinimized()) { cfg.bounds = win.getBounds(); saveCfg(); } };
   win.on('resized', remember); win.on('moved', remember);
-  win.on('focus', () => win.flashFrame(false));
+  win.on('focus', () => { win.flashFrame(false); updateOverlay(); });
+  win.on('blur', () => updateOverlay());
+  win.on('hide', () => updateOverlay());
+  win.on('minimize', () => updateOverlay());
 }
 
 // ---------------------------------------------------------------- Tray
@@ -157,7 +160,60 @@ async function scanGames() {
 function setGame(name) {
   currentGame = name;
   send('game', name);
+  updateOverlay();
 }
+
+// ---------------------------------------------------------------- In-Game-Overlay
+// Durchsichtiges Fenster über dem Spiel: zeigt, wer im Voice ist und wer redet. Klicks gehen durch.
+// Erscheint nur, wenn man im Voice ist und ein Spiel läuft (oder „auch ohne Spiel“ an ist) – nicht, solange Orbyt selbst vorne ist.
+let overlay = null, ovlState = null, ovlHidden = false;
+const OW = 340, OH = 600;
+function ensureOverlay() {
+  if (overlay && !overlay.isDestroyed()) return overlay;
+  overlay = new BrowserWindow({
+    width: OW, height: OH, show: false, frame: false, transparent: true, resizable: false, movable: false, focusable: false,
+    skipTaskbar: true, hasShadow: false, alwaysOnTop: true, fullscreenable: false, backgroundColor: '#00000000',
+    webPreferences: { preload: path.join(__dirname, 'overlay-preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false },
+  });
+  overlay.setAlwaysOnTop(true, 'screen-saver');
+  overlay.setIgnoreMouseEvents(true);
+  try { overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true }); } catch {}
+  overlay.loadFile(path.join(__dirname, 'overlay.html'));
+  overlay.webContents.on('will-navigate', e => e.preventDefault());
+  overlay.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  overlay.on('closed', () => { overlay = null; });
+  return overlay;
+}
+function placeOverlay(pos) {
+  const d = screen.getPrimaryDisplay().workArea;
+  const right = pos === 'tr' || pos === 'br', bottom = pos === 'bl' || pos === 'br';
+  overlay.setBounds({ x: right ? d.x + d.width - OW - 8 : d.x + 8, y: bottom ? d.y + d.height - OH - 8 : d.y + 8, width: OW, height: OH });
+}
+function cleanState(st) {
+  const s = v => String(v ?? '').slice(0, 64);
+  const p = st?.prefs || {};
+  const pick = (v, list, def) => (list.includes(v) ? v : def);
+  return {
+    channel: s(st?.channel),
+    users: (Array.isArray(st?.users) ? st.users : []).slice(0, 25).map(u => ({
+      name: s(u.name), speaking: !!u.speaking, muted: !!u.muted, deafened: !!u.deafened,
+      avatar: typeof u.avatar === 'string' && /^https:\/\//.test(u.avatar) ? u.avatar.slice(0, 400) : null,
+      color: typeof u.color === 'string' && /^#[0-9a-f]{6}$/i.test(u.color) ? u.color : null,
+    })),
+    prefs: { on: p.on !== false, always: !!p.always, size: pick(p.size, ['small', 'large'], 'large'), names: pick(p.names, ['always', 'speaking', 'never'], 'always'),
+      users: pick(p.users, ['always', 'speaking'], 'always'), pos: pick(p.pos, ['tl', 'tr', 'bl', 'br'], 'tl') },
+  };
+}
+function updateOverlay() {
+  const st = ovlState;
+  const want = st && st.prefs.on && st.users.length && !ovlHidden && (currentGame || st.prefs.always) && !(win && win.isFocused() && win.isVisible());
+  if (!want) { if (overlay && !overlay.isDestroyed() && overlay.isVisible()) overlay.hide(); return; }
+  const o = ensureOverlay();
+  placeOverlay(st.prefs.pos);
+  const go = () => { o.webContents.send('state', st); if (!o.isVisible()) o.showInactive(); };
+  if (o.webContents.isLoading()) o.webContents.once('did-finish-load', go); else go();
+}
+ipcMain.on('overlay', (_e, st) => { ovlState = cleanState(st); updateOverlay(); });
 
 // ---------------------------------------------------------------- Updates
 let updater = null;
@@ -237,6 +293,8 @@ app.whenReady().then(() => {
   // Stumm/Taub funktioniert auch im Spiel (globale Tastenkürzel)
   globalShortcut.register('CommandOrControl+Shift+M', () => send('hotkey', 'mute'));
   globalShortcut.register('CommandOrControl+Shift+D', () => send('hotkey', 'deafen'));
+  // Overlay ein-/ausblenden
+  globalShortcut.register('CommandOrControl+Shift+O', () => { ovlHidden = !ovlHidden; updateOverlay(); });
   scheduleScan();
   win.webContents.on('did-finish-load', () => { setTimeout(scanGames, 3000); });
   setTimeout(() => checkUpdates(false), 8000);

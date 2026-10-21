@@ -1,0 +1,19 @@
+html, body { margin: 0; background: transparent; overflow: hidden; font-family: "Inter", "Segoe UI", system-ui, sans-serif; user-select: none; }
+#box { position: fixed; display: flex; flex-direction: column; gap: 6px; padding: 10px; }
+#box.pos-tl { top: 0; left: 0; } #box.pos-tr { top: 0; right: 0; align-items: flex-end; }
+#box.pos-bl { bottom: 0; left: 0; flex-direction: column-reverse; } #box.pos-br { bottom: 0; right: 0; align-items: flex-end; flex-direction: column-reverse; }
+#list { display: flex; flex-direction: column; gap: 5px; }
+.pos-tr #list, .pos-br #list { align-items: flex-end; }
+.row { display: flex; align-items: center; gap: 7px; transition: opacity .15s; }
+.pos-tr .row, .pos-br .row { flex-direction: row-reverse; }
+.av { position: relative; flex: none; border-radius: 50%; background: #5b4bd6; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(8, 10, 20, .8); transition: box-shadow .12s; }
+.size-large .av { width: 36px; height: 36px; font-size: 14px; } .size-small .av { width: 26px; height: 26px; font-size: 11px; }
+.av img { width: 100%; height: 100%; object-fit: cover; }
+.row.speaking .av { box-shadow: 0 0 0 2.5px #3ddc84, 0 0 12px rgba(61, 220, 132, .7); }
+.name { font-size: 12.5px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 999px; background: rgba(8, 10, 20, .74); text-shadow: 0 1px 2px rgba(0,0,0,.5); white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.size-small .name { font-size: 11.5px; padding: 2px 8px; }
+.row.speaking .name { box-shadow: 0 0 0 1.5px #3ddc84; }
+.ic { display: inline-flex; color: #f87171; background: rgba(8, 10, 20, .74); border-radius: 999px; padding: 3px; }
+.ic svg { width: 13px; height: 13px; }
+#chan span { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 999px; background: rgba(124, 92, 255, .78); }

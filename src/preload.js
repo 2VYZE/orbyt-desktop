@@ -11,4 +11,6 @@ contextBridge.exposeInMainWorld('orbytDesktop', {
   setPerf: (on, pref) => ipcRenderer.send('perf', { on: !!on, pref: pref === true || pref === false ? pref : 'auto' }),
   onPerf: cb => ipcRenderer.on('perf', (_e, pref) => cb(pref)),
   setVoice: on => ipcRenderer.send('voice', !!on),
+  // In-Game-Overlay: wer im Voice ist und wer redet
+  setOverlay: state => ipcRenderer.send('overlay', state),
 });
